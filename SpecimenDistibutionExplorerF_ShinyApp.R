@@ -120,7 +120,6 @@ server <- function(input, output, session) {
     }
   })
   
-  
   #App Tab 2 
   #Plot the seasonal variation of the selected species
   output$seasonal <- renderPlot({
@@ -165,7 +164,7 @@ server <- function(input, output, session) {
     }
    })  
  
-   #Print text with the altitudinal range output
+   #Print text with the altitudinal range of selected species
    output$range <- renderText({
      chosenspp <- input$spp
      chosengen <- input$genus
