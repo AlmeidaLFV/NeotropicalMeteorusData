@@ -3,12 +3,11 @@ if(!require(leaflet)) install.packages("leaflet")
 if(!require(readxl)) install.packages("readxl")
 if(!require(dplyr)) install.packages("dplyr")
 
-#load data: interactive file 
+#load data from spreadsheet 
 data<-read_excel(file.choose()) %>% select('genus','species','year', 'month',
  'latitude','longitude', 'altitude')
 
-
-# retrieve names of genus and species on data set
+# retrieve names of genera and species on data set
 gens <- unique(data$genus) %>% sort()
 spps <- unique(data$species) %>% sort()
 
@@ -16,18 +15,18 @@ spps <- unique(data$species) %>% sort()
 ui <- fluidPage(
   titlePanel("Specimen record explorer"),
   
-  #sidebar-species selection 
+  #Sidebar set-genus and species selection 
   sidebarLayout(
     sidebarPanel(
       selectInput(inputId = 'genus',label = 'Select genus',choices = gens),
       selectInput(inputId = 'spp',label = 'Select species',choices = c("'all'",
                                                                        spps)),
     ),
-    # main panel set       
+    # Main panel set       
     mainPanel(
       #set tabs
       tabsetPanel(
-        #TAB 1 - map and general data
+        #App TAB 1 - Map and general data
         tabPanel("Map of distribution", 
           leafletOutput("map"),
           textOutput("spname"),
@@ -36,11 +35,11 @@ ui <- fluidPage(
           tags$head(tags$style("#spname,#n_records, #n_species
                                {color: black;font-size: 18px;}"))
         ),
-        #Tab 2 - Monthly distribution
+        #App Tab 2 - Monthly distribution
         tabPanel("Monthly distribution", 
           plotOutput(outputId = "seasonal")
         ),
-        #Tab3 - altitudinal distribution
+        #App Tab3 - Altitudinal distribution
         tabPanel("Altitudinal distribution",
           plotOutput(outputId = "alt"),
           textOutput("range"),
@@ -54,18 +53,17 @@ ui <- fluidPage(
 #App server
 server <- function(input, output, session) {
     
-  # Modify species list based on the genus selected   
+  # Create species list based on the genus selected   
   observe({
     chosengen <- input$genus
     d_genus <- data[data$genus==chosengen,]
     species_names <- unique(d_genus$species) %>% sort()
     updateSelectInput(session, inputId = "spp",label = "Select species",
                       choices = c("'all'", species_names))
-  
   })
  
-  #TAB 1
-  #Map output         
+  #App TAB 1
+  #Plot map with distribution of selected species         
   output$map <- renderLeaflet({
     chosengen <- input$genus
     chosenspp <- input$spp
@@ -78,7 +76,6 @@ server <- function(input, output, session) {
         addScaleBar(position = "bottomleft")%>%
         addMarkers(lng = as.numeric(d_genus$longitude), 
                          lat = as.numeric(d_genus$latitude)) 
-       
       }
      
       else {     
@@ -92,13 +89,13 @@ server <- function(input, output, session) {
       }
   })
 
-  #Selected data text
+  #Print text displaying the data selected 
   output$spname <- renderText({
     paste("Selected:", input$genus, input$spp)
     
   })
   
-   #number of records 
+   #Print text displayng the total number of records on the data selected 
   output$n_records <- renderText({
     chosenspp <- input$spp
     chosengen <- input$genus
@@ -112,7 +109,7 @@ server <- function(input, output, session) {
     }
   })
     
-  #number of species
+  #Print text with the total number of recorded species in the selected genus
   output$n_species <- renderText({
     chosenspp <- input$spp
     chosengen <- input$genus
@@ -124,8 +121,8 @@ server <- function(input, output, session) {
   })
   
   
-  #Tab 2 
-  #Seasonal variation output
+  #App Tab 2 
+  #Plot the seasonal variation of the selected species
   output$seasonal <- renderPlot({
     chosenspp <- input$spp
     chosengen <- input$genus
@@ -149,8 +146,8 @@ server <- function(input, output, session) {
     }
   })
   
-   #Tab 3
-   #altitudinal plot
+   #App Tab 3
+   #Plot the altitudinal range of selected species
    output$alt<-renderPlot({
     chosenspp <- input$spp
     chosengen <- input$genus
@@ -168,7 +165,7 @@ server <- function(input, output, session) {
     }
    })  
  
-   #altitude range output
+   #Print text with the altitudinal range output
    output$range <- renderText({
      chosenspp <- input$spp
      chosengen <- input$genus
